@@ -1,7 +1,12 @@
 #include "stdbool.h"
 #include "curses.h"
 #include "stdlib.h"
+#include "string.h"
 #include "signal.h"
+
+#include "ascii.h"
+
+const int TEXT_CHUNK_SIZE = 10;
 
 void signal_handler()
 {
@@ -15,22 +20,57 @@ int main(int argc, char const *argv[])
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
+    initscr();
     noecho();
     keypad(stdscr, true);
 
-    initscr();
+    int text_cap = TEXT_CHUNK_SIZE;
+    int text_length = 0;
 
-    printw("Hello!");
+    char *text = malloc(text_cap * sizeof(char));
 
-    char text[256];
-
-    while (true)
+    for (int i = 0; i < text_cap; i++)
     {
-        char c = getch();
-        printw("\n\n%c", c);
+        if (i + 1 == text_cap)
+        {
+            text_cap += TEXT_CHUNK_SIZE;
 
-        move(30, 0);
+            text = realloc(text, text_cap * sizeof(char));
+            if (text == NULL)
+            {
+                fprintf(stderr, "Failed to allocate memory :(\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        wclear(stdscr);
+        printw("%d %d %s", text_cap, text_length, text);
+
+        int c = getch();
+
+        switch (c)
+        {
+        case DELETE_KEY:
+            int prev = i - 1;
+
+            if (prev >= 0)
+            {
+                text[prev] = NULL_KEY;
+                i -= 2;
+                text_length--;
+            }
+
+            break;
+
+        default:
+            text[i] = (char)c;
+            move(0, i);
+            text_length++;
+            break;
+        }
     }
+
+    // free(text);
 
     return 0;
 }
