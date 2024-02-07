@@ -44,7 +44,7 @@ int main(int argc, char const *argv[])
         }
 
         wclear(stdscr);
-        printw("%d %d %s", text_cap, text_length, text);
+        printw("[%d/%d] %s", text_length, text_cap, text);
 
         int c = getch();
 
