@@ -10,8 +10,17 @@
 
 const int TEXT_CHUNK_SIZE = 10;
 
-void signal_handler()
+char *text_buffer;
+FILE *debug_file;
+
+void exit_handler()
 {
+    if (text_buffer != NULL)
+        free(text_buffer);
+
+    if (debug_file != NULL)
+        fclose(debug_file);
+
     endwin();
     printf("nao~ nao~\n");
     exit(0);
@@ -19,19 +28,20 @@ void signal_handler()
 
 int main(int argc, char const *argv[])
 {
-    signal(SIGTERM, signal_handler);
-    signal(SIGINT, signal_handler);
+    signal(SIGTERM, exit_handler);
+    signal(SIGINT, exit_handler);
 
     initscr();
+    raw();
+
     noecho();
     keypad(stdscr, true);
 
     int text_cap = TEXT_CHUNK_SIZE;
     int text_length = 0;
 
-    char *text = malloc(text_cap * sizeof(char));
-
-    FILE *debug_file = fopen(DEBUG_FILE_NAME, "w");
+    text_buffer = malloc(text_cap * sizeof(char));
+    debug_file = fopen(DEBUG_FILE_NAME, "w");
 
     for (int i = 0; i < text_cap; i++)
     {
@@ -39,8 +49,8 @@ int main(int argc, char const *argv[])
         {
             text_cap += TEXT_CHUNK_SIZE;
 
-            text = realloc(text, text_cap * sizeof(char));
-            if (text == NULL)
+            text_buffer = realloc(text_buffer, text_cap * sizeof(char));
+            if (text_buffer == NULL)
             {
                 fprintf(stderr, "Failed to allocate memory :(\n");
                 exit(EXIT_FAILURE);
@@ -48,12 +58,15 @@ int main(int argc, char const *argv[])
         }
 
         wclear(stdscr);
-        printw("[%d/%d] %s", text_length, text_cap, text);
+        printw("[%d/%d] %s", text_length, text_cap, text_buffer);
 
         int c = getch();
 
         fprintf(debug_file, "Char: %c | Dec: %d\n", c, c);
         fflush(debug_file);
+
+        if (c == CTRL_C_KEY)
+            break;
 
         switch (c)
         {
@@ -62,7 +75,7 @@ int main(int argc, char const *argv[])
 
             if (prev >= 0)
             {
-                text[prev] = NULL_KEY;
+                text_buffer[prev] = NULL_KEY;
                 i -= 2;
                 text_length--;
             }
@@ -70,15 +83,14 @@ int main(int argc, char const *argv[])
             break;
 
         default:
-            text[i] = (char)c;
+            text_buffer[i] = (char)c;
             move(0, i);
             text_length++;
             break;
         }
     }
 
-    fclose(debug_file);
-    free(text);
+    exit_handler();
 
     return 0;
 }
