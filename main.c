@@ -26,7 +26,7 @@ void exit_handler()
     exit(0);
 }
 
-int main(int argc, char const *argv[])
+void init_setup()
 {
     signal(SIGTERM, exit_handler);
     signal(SIGINT, exit_handler);
@@ -36,6 +36,11 @@ int main(int argc, char const *argv[])
 
     noecho();
     keypad(stdscr, true);
+}
+
+int main(int argc, char const *argv[])
+{
+    init_setup();
 
     int text_cap = TEXT_CHUNK_SIZE;
     int text_length = 0;
@@ -70,6 +75,16 @@ int main(int argc, char const *argv[])
 
         switch (c)
         {
+        case CTRL_S_KEY:
+            if (argc == 2) // ! Check if user input is valid
+            {
+                // We only open this file when needed
+                FILE *dst_file = fopen(argv[1], "w");
+                fprintf(dst_file, "%s\n", text_buffer);
+                fclose(dst_file);
+            };
+
+            break;
         case DELETE_KEY:
             int prev = i - 1;
 
