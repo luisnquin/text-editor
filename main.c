@@ -6,6 +6,8 @@
 
 #include "ascii.h"
 
+#define DEBUG_FILE_NAME "build/keys.debug"
+
 const int TEXT_CHUNK_SIZE = 10;
 
 void signal_handler()
@@ -29,6 +31,8 @@ int main(int argc, char const *argv[])
 
     char *text = malloc(text_cap * sizeof(char));
 
+    FILE *debug_file = fopen(DEBUG_FILE_NAME, "a");
+
     for (int i = 0; i < text_cap; i++)
     {
         if (i + 1 == text_cap)
@@ -47,6 +51,9 @@ int main(int argc, char const *argv[])
         printw("[%d/%d] %s", text_length, text_cap, text);
 
         int c = getch();
+
+        fprintf(debug_file, "Char: %c | Dec: %d\n", c, c);
+        fflush(debug_file);
 
         switch (c)
         {
@@ -70,7 +77,8 @@ int main(int argc, char const *argv[])
         }
     }
 
-    // free(text);
+    fclose(debug_file);
+    free(text);
 
     return 0;
 }
