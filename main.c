@@ -31,7 +31,7 @@ int main(int argc, char const *argv[])
 
     char *text = malloc(text_cap * sizeof(char));
 
-    FILE *debug_file = fopen(DEBUG_FILE_NAME, "a");
+    FILE *debug_file = fopen(DEBUG_FILE_NAME, "w");
 
     for (int i = 0; i < text_cap; i++)
     {
